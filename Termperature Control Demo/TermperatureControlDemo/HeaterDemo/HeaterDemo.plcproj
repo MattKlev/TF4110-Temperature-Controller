@@ -22,6 +22,12 @@
     <Folder Include="Visualizations" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Data types\E_TunePreSets.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Data types\ST_TuneParams.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="GlobalImagePool.TcIPO" />
     <Compile Include="GlobalTextList.TcGTLO">
       <SubType>Code</SubType>

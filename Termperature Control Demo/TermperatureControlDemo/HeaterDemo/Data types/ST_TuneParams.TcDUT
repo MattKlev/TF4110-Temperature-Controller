@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <DUT Name="ST_TuneParams" Id="{10007334-1ba9-0cf5-262c-ee0524cac7cb}">
+    <Declaration><![CDATA[TYPE ST_TuneParams :
+STRUCT
+	fKp			:LREAL;
+	fTn			:LREAL;
+	fTv			:LREAL;
+	fTd			:LREAL;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

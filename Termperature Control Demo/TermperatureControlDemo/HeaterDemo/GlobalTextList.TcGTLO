@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4022.16">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
   <GlobalTextList Name="GlobalTextList" Id="{84ca4fe0-4776-4ee0-8353-dfc607bf60af}">
     <XmlArchive>
       <Data>
@@ -56,6 +56,31 @@
               <l n="LanguageTexts" t="ArrayList" />
             </o>
             <o>
+              <v n="TextID">"919"</v>
+              <v n="TextDefault">"fTuneKp =  %1.4f"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"220"</v>
+              <v n="TextDefault">"fTuneTd =  %s"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"24"</v>
+              <v n="TextDefault">"fTuneTd=  %s"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"614"</v>
+              <v n="TextDefault">"fTuneTn =  %s"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"203"</v>
+              <v n="TextDefault">"fTuneTv =  %s"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
               <v n="TextID">"617"</v>
               <v n="TextDefault">"Heater Power"</v>
               <l n="LanguageTexts" t="ArrayList" />
@@ -68,6 +93,11 @@
             <o>
               <v n="TextID">"733"</v>
               <v n="TextDefault">"Internal gains (from tuning)"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"708"</v>
+              <v n="TextDefault">"internal tuning parameters"</v>
               <l n="LanguageTexts" t="ArrayList" />
             </o>
             <o>
