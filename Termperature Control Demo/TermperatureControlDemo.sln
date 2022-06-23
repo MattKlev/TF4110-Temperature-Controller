@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.32228.343
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.1831
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{B1E792BE-AA5F-4E3C-8C82-674BF9C0715B}") = "TermperatureControlDemo", "TermperatureControlDemo\TermperatureControlDemo.tsproj", "{BD74A088-F75F-4C59-809B-5BD0AACAC380}"
 EndProject
