@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectGuid>{6eb6e157-5a76-47d3-b2c1-b66501772143}</ProjectGuid>
+    <AssemblyName>Measurement Project</AssemblyName>
+    <Name>Measurement Project</Name>
+    <RootNamespace>Measurement Project</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="Asymptotic.svdx">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Fast.svdx">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Overlay.svdx">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Slow.svdx">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="YT Scope Project.tcscopex">
+      <SubType>Content</SubType>
+    </Content>
+  </ItemGroup>
+</Project>

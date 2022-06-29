@@ -1,0 +1,235 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="MAIN" Id="{af87d6dd-0784-46eb-bd9b-ea6d96cfb9a1}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM MAIN
+
+VAR
+	
+		eCTRL_ModeController 	: E_CTRL_MODE := eCTRL_MODE_IDLE;
+		eCTRL_ModeProcess	 	: E_CTRL_MODE := eCTRL_MODE_IDLE; 
+		
+		fW						: LREAL	:= 100.0;				(* setpoint *)
+		fY						: LREAL;						(* control value *)
+		fX						: LREAL;						(* actual value from simulated process *)
+		
+	
+		stControllerParameter	: ST_CTRL_TempCtrlParameter := (		
+		
+			(* general parameters 													 *)
+			iMode					:= 1,											(* 1=heating, 2=cooling, 3=heating&cooling *)
+			iReactionOnFailure		:= eCTRL_ReactionOnFailure_StopController,		(* 0=controller off, 1=manual op, 2=yMin, 3=yMax *)
+	    	
+			bSelCtrlParameterSet	:= FALSE,										(* FALSE = internal set, TRUE = external set *)//Internal are calculated after an auto tune
+	    	
+			dwAlarmSupp				:= 16#0000EFFF,									(* alarm suppression *)
+			tCtrlCycleTime			:= T#500MS,										(* controller cycle time *)
+			tTaskCycleTime			:= T#10MS,										(* plc task cycle time *)
+			
+			(* tuning parameters 													 *)
+			iTuningMode				:= 1,											(* only heating, only cooling, first heating then cooling or vice versa *)
+	    	
+			tTuneStabilisation		:= T#5S,										(* wait for a stable system *)
+	    	
+			fEndTunePercentHeating	:= 80.0,										(* switch to closed loop control when X > 0.8*W *)
+			fYTuneHeating			:= 100.0,										(* step change while tuning operation *)
+			fYStableHeating			:= 0.0,											(* tuning operation *)
+	    	
+			fEndTunePercentCooling	:= 20.0,										(* switch to closed loop control when X < 0.2*W *)
+			fYTuneCooling			:= 0.0,											(* step change while tuning operation *)
+			fYStableCooling			:= 0.0,											(* tuning operation *)
+			fScalingFactor			:= 1.0,											(* Scaling factor for KP heating/cooling *)
+			
+			(* setpoint parameters 													 *)
+			fWMin					:= 0.0,											(* lower limit *)
+			fWMax					:= 300.0,										(* upper limit *)
+	    	
+			(* start up *)
+			bEnableSoftStart		:= FALSE,										(* FALSE = no soft start, TRUE = soft start *)
+			bEnableRamping			:= FALSE,										(* FALSE = no ramping, TRUE = ramping *)
+	    	
+			fWStartUp				:= 0.0,											(* soft start plateau setpoint *)
+			tStartUp				:= T#0MS,										(* soft start waiting time*)
+			bStartUpRamping			:= FALSE,										(* enable ramping while start up phase *)
+			fWStartUpVeloPos		:= 1.0,											(* max gradient for increasing setpoint in start up phase*)
+			fWStartUpVeloNeg		:= 1.0,											(* max gradient for decreasing setpoint in start up phase *)
+	    	
+			fWVeloPos				:= 1.0,											(* max gradient for increasing setpoint *)
+			fWVeloNeg				:= 1.0,											(* max gradient for decreasing setpoint *)	
+	    	
+			(* actual value parameters     											 *)
+			bFilter 				:= FALSE,
+			tFilter					:= T#0S,
+			
+			(* deadband parameters     												 *)
+			bDeadband				:= FALSE,
+			fEDeadband				:= 0.0,											(* deadband *)
+			
+			(* control value parameters     										 *)
+			fYMin					:= 0.0,											(* lower limit *)
+			fYMax					:= 100.0,										(* upper limit *)
+			fYManual				:= 0.0,									 		(* manual operation*)
+			fYOnFailure				:= 0.0,											(* control value on failure *)
+	    	
+			tPWMCycleTime			:= t#1s,										(* PWM: period *)
+			tPWMMinOffTime			:= t#0s,										(* PWM: min off time *)
+			tPWMMinOnTime			:= t#0s,										(* PWM: min on time *)
+			tPWMWaitingTime			:= t#0s,										(* PWM: min waiting time *) (* not yet implemented !!!!*)
+	    	
+			fYThresholdOff			:= 0.0,											(* 3-Point: Off threshold *)
+			fYThresholdOn			:= 0.0,											(* 3-Point: On threshold *)
+	    	
+			nCyclesForSwitchOver	:= 100,
+	    	
+			(* controller settings			     									 *)
+			bEnablePreController 	:= FALSE,										(* enable precontroller *)
+			bEnableZones 			:= FALSE,										(* enable zone around setpoint with open loop control *)
+			bEnableCVFilter 		:= FALSE,										(* enable filter for CV (type see iFilterType) *)
+			iFilterType 			:= E_CTRL_FilterType.eCTRL_FilterType_FIRSTORDER,(* filtertype of CV filter *)
+			iControllerType 		:= eCTRL_ControllerType_PID,					(* used controller normally PID *)
+			
+			
+			(* min max temperatures	     											 *)
+			TempLow					:= -5.0,
+			TempLowLow				:= -10.0,
+			TempHigh				:= 5.0,
+			TempHighHigh			:= 10.0,
+			TempAbsoluteHigh		:= 300.0,
+			TempAbsoluteLow			:= 0.0,	
+			
+			(* internal tuning parameters *)
+			fTuneKp					:= 1.2,
+			fTuneTn					:= 2.0,
+			fTuneTv					:= 0.42,
+			fTuneTd					:= 0.25
+		);
+	
+		
+	fbTempController			: FB_CTRL_TempController;
+	
+	fbProcess					: FB_Process;	
+	stController				: ST_CTRL_ParaController;
+	
+	
+	//Test case
+	bStartTest				:BOOL;
+	iTestSetp				:UDINT;
+	tonReset				: TON := (PT := TIME#2S);
+	tonRun					: TON := (PT := TIME#2M);	
+	stTestResults			:ST_TestResults;
+	
+	//Write results to a file
+ 	fbXmlSrvWrite  			: FB_XmlSrvWriteByName;
+   	sFilePath      			: T_MaxString := 'C:\TwinCAT\3.1\Boot\TestResults.xml';
+   	sXPath         			: T_MaxString := '/dataentry/MAIN.stTestResults';	
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+(* Simulate process *)
+fbProcess(	eCTRL_Mode	:= eCTRL_ModeProcess,
+			fY 			:= fbTempController.fYAnalog, 
+			bNoise 		:= , 
+			tTa 		:= stControllerParameter.tTaskCycleTime);	
+
+(* Actual temperature *)				
+fX := fbProcess.fX;	
+
+(* Start controller *)
+fbTempController(
+					eCtrlMode				:= eCTRL_ModeController, 
+					bSelSetpoint			:= FALSE, 
+					fW1						:= fW, 
+					fW2						:= , 
+					fX						:= fX, 
+					fYManual				:= , 
+					bOpenThermocouple		:= FALSE, 
+					bReverseThermocouple	:= FALSE, 
+					bBackVoltage			:= FALSE, 
+					bLeakage				:= FALSE, 
+					bShortCircuit			:= FALSE, 
+					bOpenCircuit			:= FALSE, 
+					sParaControllerExternal	:= stController, 
+					sControllerParameter	:= stControllerParameter, 
+					);
+					 
+(* Analog output *)			
+fY 			:= fbTempController.fYAnalog;
+
+//Test case
+CASE iTestSetp OF
+	0://Idel
+		IF bStartTest THEN
+			tonRun(IN:=FALSE);
+			tonReset(IN:=FALSE);
+			bStartTest:=FALSE;
+			MEMSET(ADR(stTestResults),0,SIZEOF(stTestResults));
+			iTestSetp							:=10;
+			eCTRL_ModeController				:=E_CTRL_MODE.eCTRL_MODE_TUNE;
+			eCTRL_ModeProcess					:=E_CTRL_MODE.eCTRL_MODE_ACTIVE;
+			stTestResults.InitialParmsUsed 		:=stControllerParameter;
+		END_IF
+		
+	10://Waiting for controller to complete auto tuning	
+		IF fbTempController.eCtrlState = E_CTRL_STATE.eCTRL_STATE_TUNED THEN	
+			eCTRL_ModeController 				:=E_CTRL_MODE.eCTRL_MODE_ACTIVE;
+			iTestSetp							:=20;
+		END_IF
+		
+	20: //Finished auto tunning - run for a bit to see results of switching from auto tune to active	
+		tonRun(IN:=TRUE);
+		stTestResults.CalcedInternalGains		:= fbTempController.sParaControllerInternal;
+		IF tonRun.Q THEN
+			stTestResults.MaxOverShootDuringAutoTune:= fbTempController.fMaxOverShoot;
+			stTestResults.StartupTimeDuringAutoTune := fbTempController.tStartUpTime;
+			tonRun(IN:=FALSE);
+			iTestSetp:=30;
+		END_IF
+		
+	30://Reset simulation model, and controller
+		eCTRL_ModeController	:=E_CTRL_MODE.eCTRL_MODE_RESET;
+		eCTRL_ModeProcess		:=E_CTRL_MODE.eCTRL_MODE_RESET;
+		tonReset(IN:=TRUE);
+		IF tonReset.Q THEN
+			tonReset(IN:=FALSE);
+			eCTRL_ModeController	:=E_CTRL_MODE.eCTRL_MODE_ACTIVE;
+			eCTRL_ModeProcess		:=E_CTRL_MODE.eCTRL_MODE_ACTIVE;
+			iTestSetp		:=40;
+		END_IF
+		
+	40://Run test with calcuated gains from auto tuning
+		tonRun(IN:=TRUE);
+		IF tonRun.Q THEN
+			stTestResults.MaxOverShoot	:=fbTempController.fMaxOverShoot;
+			stTestResults.StartupTime 	:=fbTempController.tStartUpTime;
+			tonRun(IN:=FALSE);
+			iTestSetp:=50;
+		END_IF		
+		
+	50://Fisned running test
+		iTestSetp:=60;
+		eCTRL_ModeController	:=E_CTRL_MODE.eCTRL_MODE_RESET;
+		eCTRL_ModeProcess		:=E_CTRL_MODE.eCTRL_MODE_RESET;
+
+	60://Write results to a file.
+		
+		fbXmlSrvWrite(
+		 nMode      := XMLSRV_ADDMISSING, 
+		 sSymName   := 'MAIN.stTestResults',
+		 sFilePath  := sFilePath,
+		 sXPath     := sXPath,
+		 bExecute   := TRUE
+		);	
+		
+		IF NOT fbXmlSrvWrite.bBusy THEN
+			fbXmlSrvWrite(bExecute:=FALSE);
+			iTestSetp				:=0;
+			eCTRL_ModeController	:=E_CTRL_MODE.eCTRL_MODE_IDLE;
+			eCTRL_ModeProcess		:=E_CTRL_MODE.eCTRL_MODE_IDLE;
+		END_IF
+END_CASE
+
+
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>
