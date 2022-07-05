@@ -69,6 +69,9 @@
     </PlaceholderReference>
   </ItemGroup>
   <ItemGroup>
+    <LibraryReference Include="BASIC,3.31,OSCAT">
+      <Namespace>BASIC</Namespace>
+    </LibraryReference>
     <LibraryReference Include="Tc2_ControllerToolbox,newest,Beckhoff Automation GmbH">
       <Namespace>Tc2_ControllerToolbox</Namespace>
     </LibraryReference>

@@ -16,8 +16,8 @@ END_VAR
 
 VAR
 	(* Processparameters *)
-	tT11		:	TIME	:= T#5S; //T#5S;
-	tT12		:	TIME	:= T#10S; //t#25s;
+	tT11		:	TIME	:= T#10S; //T#5S;
+	tT12		:	TIME	:= T#35S; //t#25s;
 
 	(* process *)
 	fbProcessPart1	:	FB_CTRL_PT1;
@@ -32,12 +32,12 @@ END_VAR
 ]]></Declaration>
     <Implementation>
       <ST><![CDATA[(* init structures *)
-stProcessPart1.fKp := 1.2;
+stProcessPart1.fKp :=1.2; //1.0;
 stProcessPart1.tCtrlCycleTime := tTa;
 stProcessPart1.tT1 := tT11;
 stProcessPart1.tTaskCycleTime := tTa;
 
-stProcessPart2.fKp := 1.5;
+stProcessPart2.fKp := 1.2;//1.0;
 stProcessPart2.tCtrlCycleTime := tTa;
 stProcessPart2.tT1 := tT12;
 stProcessPart2.tTaskCycleTime := tTa;

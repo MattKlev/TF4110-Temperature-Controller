@@ -6,16 +6,16 @@
         <o xml:space="preserve" t="RecipeManObject">
           <o n="LMGuids" t="LanguageModelGuidHelper">
             <d n="NamesAndGuids" t="Hashtable" ckt="String" cvt="Guid">
+              <v>RECIPEFACTORYFB_INIT</v>
+              <v>fa7d0412-ed85-4fe0-b300-50c535039a5a</v>
               <v>GVL_RECIPEMANAGEMENT_3300</v>
               <v>4c64d641-e018-4be4-a07c-58e0ea1d4857</v>
-              <v>RECIPEFACTORY</v>
-              <v>ab0831b5-61cd-4553-a224-45235b0c68af</v>
               <v>RECIPEMANAGEMENTINITFB_INIT</v>
               <v>4f458ba5-4063-4dd3-8836-3db94229b5bb</v>
               <v>RECIPEFACTORYFREERECIPE</v>
               <v>ed81db85-4f8b-4666-97b3-9736e6f902c5</v>
-              <v>RECIPEFACTORYFB_INIT</v>
-              <v>fa7d0412-ed85-4fe0-b300-50c535039a5a</v>
+              <v>RECIPEFACTORY</v>
+              <v>ab0831b5-61cd-4553-a224-45235b0c68af</v>
               <v>RECIPEMANAGEMENTINITFB_REINIT</v>
               <v>c9a244aa-14e4-46c7-b707-5470e5ddd7dc</v>
               <v>RECIPEMANAGEMENTINIT</v>
@@ -31,8 +31,8 @@
             <v n="LoadType">0U</v>
             <v n="WriteType">0U</v>
             <v n="FileExtension">".txtrecipe"</v>
-            <v n="FilePath">""</v>
-            <v n="TokenSeparator">":="</v>
+            <v n="FilePath">"C:\TwinCAT\3.1\Boot\Plc"</v>
+            <v n="TokenSeparator">"|"</v>
             <v n="ColumnList">"0|1"</v>
             <v n="AutoSaveRecipes">true</v>
           </o>

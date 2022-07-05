@@ -22,7 +22,7 @@ VAR
 			bSelCtrlParameterSet	:= FALSE,										(* FALSE = internal set, TRUE = external set *)//Internal are calculated after an auto tune
 	    	
 			dwAlarmSupp				:= 16#0000EFFF,									(* alarm suppression *)
-			tCtrlCycleTime			:= T#500MS,										(* controller cycle time *)
+			tCtrlCycleTime			:= T#10MS,										(* controller cycle time *)
 			tTaskCycleTime			:= T#10MS,										(* plc task cycle time *)
 			
 			(* tuning parameters 													 *)
@@ -111,16 +111,29 @@ VAR
 	
 	
 	//Test case
-	bStartTest				:BOOL;
-	iTestSetp				:UDINT;
+	bStartTest				: BOOL;
+	iTestSetp				: UDINT;
 	tonReset				: TON := (PT := TIME#2S);
-	tonRun					: TON := (PT := TIME#2M);	
-	stTestResults			:ST_TestResults;
+	tonRun					: TON := (PT := TIME#1M30S);	
+	stTestResults			: ST_TestResults;
 	
 	//Write results to a file
  	fbXmlSrvWrite  			: FB_XmlSrvWriteByName;
    	sFilePath      			: T_MaxString := 'C:\TwinCAT\3.1\Boot\TestResults.xml';
-   	sXPath         			: T_MaxString := '/dataentry/MAIN.stTestResults';	
+   	sXPath         			: T_MaxString; //:= '/dataentry/MAIN.stTestResults';	
+	
+	//Recipe manager
+	sRecipeLoaded			:STRING;
+	RecipeMan				:RecipeManCommands;
+	{attribute 'displaymode':='hex'}
+	ResultOfLoad			:DWORD;
+	iRecipeIndex			:UDINT;
+	
+	//Scope test
+	fbSin					:GEN_SIN;
+	fAmp					:LREAL:=1;
+	fScopeOut					:LREAL;
+	rtIncrease				:R_TRIG;
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -134,7 +147,7 @@ fbProcess(	eCTRL_Mode	:= eCTRL_ModeProcess,
 (* Actual temperature *)				
 fX := fbProcess.fX;	
 
-(* Start controller *)
+(* Controller *)
 fbTempController(
 					eCtrlMode				:= eCTRL_ModeController, 
 					bSelSetpoint			:= FALSE, 
@@ -159,15 +172,34 @@ fY 			:= fbTempController.fYAnalog;
 CASE iTestSetp OF
 	0://Idel
 		IF bStartTest THEN
-			tonRun(IN:=FALSE);
-			tonReset(IN:=FALSE);
-			bStartTest:=FALSE;
-			MEMSET(ADR(stTestResults),0,SIZEOF(stTestResults));
-			iTestSetp							:=10;
-			eCTRL_ModeController				:=E_CTRL_MODE.eCTRL_MODE_TUNE;
-			eCTRL_ModeProcess					:=E_CTRL_MODE.eCTRL_MODE_ACTIVE;
-			stTestResults.InitialParmsUsed 		:=stControllerParameter;
+			iRecipeIndex:=0;
+			bStartTest	:=FALSE;
+			iTestSetp	:=5;
 		END_IF
+		
+	5: //Load recipe or finish
+		CASE iRecipeIndex OF
+			0:sRecipeLoaded:='Fast';
+			1:sRecipeLoaded:='Slow';
+			2:sRecipeLoaded:='Asymptotic';				
+		END_CASE
+		
+		CASE iRecipeIndex OF
+			0..2:	
+				ResultOfLoad:=RecipeMan.WriteRecipe(RecipeDefinitionName:='AutoTuneParms', RecipeName:=sRecipeLoaded);
+				IF ResultOfLoad = 0 THEN
+					MEMSET(ADR(stTestResults),0,SIZEOF(stTestResults));
+					eCTRL_ModeController				:=E_CTRL_MODE.eCTRL_MODE_TUNE;
+					eCTRL_ModeProcess					:=E_CTRL_MODE.eCTRL_MODE_ACTIVE;
+					stTestResults.InitialParmsUsed 		:=stControllerParameter;
+					iTestSetp							:=10;
+				ELSE
+					iTestSetp:=99;
+				END_IF
+			ELSE
+				iTestSetp:=100;
+		END_CASE
+		
 		
 	10://Waiting for controller to complete auto tuning	
 		IF fbTempController.eCtrlState = E_CTRL_STATE.eCTRL_STATE_TUNED THEN	
@@ -206,12 +238,14 @@ CASE iTestSetp OF
 		END_IF		
 		
 	50://Fisned running test
-		iTestSetp:=60;
 		eCTRL_ModeController	:=E_CTRL_MODE.eCTRL_MODE_RESET;
 		eCTRL_ModeProcess		:=E_CTRL_MODE.eCTRL_MODE_RESET;
+		iTestSetp				:=60;
 
 	60://Write results to a file.
 		
+		sXPath:=CONCAT(CONCAT(CONCAT('/',sRecipeLoaded),'/'),'MAIN.stTestResults');
+	
 		fbXmlSrvWrite(
 		 nMode      := XMLSRV_ADDMISSING, 
 		 sSymName   := 'MAIN.stTestResults',
@@ -222,13 +256,31 @@ CASE iTestSetp OF
 		
 		IF NOT fbXmlSrvWrite.bBusy THEN
 			fbXmlSrvWrite(bExecute:=FALSE);
-			iTestSetp				:=0;
+			iTestSetp				:=5;
+			iRecipeIndex			:=iRecipeIndex+1;
 			eCTRL_ModeController	:=E_CTRL_MODE.eCTRL_MODE_IDLE;
 			eCTRL_ModeProcess		:=E_CTRL_MODE.eCTRL_MODE_IDLE;
 		END_IF
+		
+	99://Error
+		iTestSetp:=0;	
+	100://Test finished
+		iTestSetp:=0;	
 END_CASE
 
+fbSin(
+	PT:=T#5S , 
+	AM:=fAmp , 
+	OS:=0 , 
+	DL:=0, 
+	Q=> , 
+	Out=>fScopeOut );
 
+
+rtIncrease(CLK:=fbSin.Out<=0 , Q=> );
+IF 	rtIncrease.Q THEN
+	fAmp:=fAmp+1;
+END_IF
 ]]></ST>
     </Implementation>
   </POU>
