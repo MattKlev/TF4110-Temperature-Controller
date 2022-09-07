@@ -2,11 +2,9 @@
 <TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
   <POU Name="MAIN" Id="{af87d6dd-0784-46eb-bd9b-ea6d96cfb9a1}" SpecialFunc="None">
     <Declaration><![CDATA[PROGRAM MAIN
-VAR
-		xStart					: BOOL;
-		
-		eCTRL_ModeController 	: E_CTRL_MODE := eCTRL_MODE_IDLE;
-		eCTRL_ModeProcess	 	: E_CTRL_MODE := eCTRL_MODE_IDLE; 
+VAR		
+		eCTRL_ModeController 	: E_CTRL_MODE := eCTRL_MODE_ACTIVE;
+		eCTRL_ModeProcess	 	: E_CTRL_MODE := eCTRL_MODE_ACTIVE; 
 		
 		fW						: LREAL	:= 100.0;				(* setpoint *)
 		fY						: LREAL;						(* control value *)
@@ -48,13 +46,13 @@ VAR
 			fWStartUp				:= 50.0,										(* soft start plateau setpoint *)
 			tStartUp				:= T#10S,										(* soft start waiting time*)
 			bStartUpRamping			:= TRUE,										(* enable ramping while start up phase *)
-			fWStartUpVeloPos		:= 1.0,										(* max gradient for increasing setpoint in start up phase*)
-			fWStartUpVeloNeg		:= 1.0,										(* max gradient for decreasing setpoint in start up phase *)
+			fWStartUpVeloPos		:= 0.5,										(* max gradient for increasing setpoint in start up phase*)
+			fWStartUpVeloNeg		:= 0.5,										(* max gradient for decreasing setpoint in start up phase *)
 	    	
 		
 			bEnableRamping			:= TRUE,										(* FALSE = no ramping, TRUE = ramping *)
-			fWVeloPos				:= 10.0,											(* max gradient for increasing setpoint *)
-			fWVeloNeg				:= 10.0,											(* max gradient for decreasing setpoint *)	
+			fWVeloPos				:= 2.0,											(* max gradient for increasing setpoint *)
+			fWVeloNeg				:= 2.0,											(* max gradient for decreasing setpoint *)	
 	    	
 			(* actual value parameters     											 *)
 			bFilter 				:= FALSE,
@@ -110,15 +108,14 @@ VAR
 	stController				: ST_CTRL_ParaController := (KpHeat := 1.3058655833206456, TnHeat := TIME#1m13s730ms, TvHeat := TIME#15s483ms, TdHeat := TIME#3s871ms);
 	
 	
+	bFirstTime					:BOOL:=TRUE;
+	fSetpoint					:LREAL;
+	
+	bMakeSoftStartRampingWork	:BOOL:=TRUE;
 END_VAR
 ]]></Declaration>
     <Implementation>
-      <ST><![CDATA[IF xStart THEN
-	xStart:=FALSE;
-	eCTRL_ModeController	:=E_CTRL_MODE.eCTRL_MODE_ACTIVE;
-	eCTRL_ModeProcess		:=E_CTRL_MODE.eCTRL_MODE_ACTIVE;
-END_IF
-
+      <ST><![CDATA[
 
 (* Simulate process *)
 fbProcess(	eCTRL_Mode	:= eCTRL_ModeProcess,
@@ -129,13 +126,46 @@ fbProcess(	eCTRL_Mode	:= eCTRL_ModeProcess,
 (* Actual temperature *)				
 fX := fbProcess.fX;	
 
+IF bMakeSoftStartRampingWork THEN
+	//work around to make soft start ramping work
+	//Credit Bill Wagner @ KNS
+	IF (bFirstTime) THEN
+	             fSetpoint := fX;                                                                      // set our new ramping start point to the current input
+	             stControllerParameter.fWVeloPos 			:= 1_000_000_000.0;                          // make sure we ramp up in one cycle (temp override)
+	             stControllerParameter.fWVeloNeg 			:= 1_000_000_000.0;                         // make sure we ramp down in one cycle (temp override)
+	              
+	             stControllerParameter.fWStartUp 			:= fX;
+	             stControllerParameter.fWStartUpVeloPos 	:= 1_000_000_000.0; //Lower these to for example to 1. Then this work around will not work. 
+	             stControllerParameter.fWStartUpVeloNeg 	:= 1_000_000_000.0; //Lower these to for example to 1. Then this work around will not work. 
+				  bFirstTime:=FALSE; 
+	ELSE
+				stControllerParameter.fWVeloPos				:=2.0;
+	            stControllerParameter.fWVeloNeg				:=2.0;
+	
+				
+				stControllerParameter.fWStartUp 			:= 50.0;
+				stControllerParameter.fWStartUpVeloPos 		:= 0.5;
+				stControllerParameter.fWStartUpVeloNeg 		:= 0.5;
+				
+	            fSetpoint := fW;
+	END_IF;
+		
+	
+	IF (fbTempController.fbStartupTimer.Q) THEN                                                                                                                                                                          // 
+	      stControllerParameter.bStartUpRamping := stControllerParameter.bEnableRamping;
+	      stControllerParameter.fWStartUpVeloPos := stControllerParameter.fWVeloPos;
+	END_IF;
+	////
+ELSE
+	 fSetpoint := fW;
+END_IF
+
 (* Controller *)
 fbTempController(
 					eCtrlMode				:= eCTRL_ModeController, 
 					bSelSetpoint			:= FALSE, 
-					fW1						:= fW, 
-					fW2						:= , 
-					fX						:= fX, 
+                    fW1                     := fSetpoint,
+                    fX                      := fX,                 
 					fYManual				:= , 
 					bOpenThermocouple		:= FALSE, 
 					bReverseThermocouple	:= FALSE, 
