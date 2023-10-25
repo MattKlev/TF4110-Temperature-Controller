@@ -18,7 +18,7 @@
 		</System>
 		<Plc>
 			<Project GUID="{7500C89B-6F0F-4011-8A9F-7E1481CC2CC0}" Name="TC_Sample" PrjFilePath="TC_Sample\TC_Sample.plcproj" TmcFilePath="TC_Sample\TC_Sample.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e">
-				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" TmcPath="TC_Sample\TC_Sample.tmc" TmcHash="{606061C4-F39A-5C33-EDC5-FB4F0C31D516}">
+				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" TmcPath="TC_Sample\TC_Sample.tmc" TmcHash="{FD2A7CAC-0BBC-0170-03AB-5A071713CB5B}">
 					<Name>TC_Sample Instance</Name>
 					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
 					<Contexts>

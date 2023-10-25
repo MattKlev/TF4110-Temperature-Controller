@@ -137,23 +137,10 @@ VAR
 	eProcessStateHMI			:E_CTRL_STATE_HMI;
 	sProcessStateHMI			:STRING;
 	
-	////Test case
-	//bStartTest				: BOOL;
-	//iTestSetp				: UDINT;
-	//tonReset				: TON;
-	//tonRun					: TON;	
-	//stTestResults			: ST_TestResults;
+	rtClearParameterSet		:R_TRIG;
+	ClearParameterSet		:BOOL;	
 	
-	//Write results to a file
-	//fbJsonFile				:FB_AppendJsonObjectToArrayAndWriteToFile;
-   	//sFilePath      			:T_MaxString := 'C:\TwinCAT\3.1\Boot\TestResults.json';
-	//
-	//Recipe manager
-	//sRecipeLoaded			:STRING;
-	//RecipeMan				:RecipeManCommands;
-	//{attribute 'displaymode':='hex'}
-	//ResultOfLoad			:DWORD;
-	//iRecipeIndex			:UDINT;
+
 END_VAR
 VAR PERSISTENT
 	arControllerParams		:ARRAY[E_SelectedParameterSet.Fast..E_SelectedParameterSet.Asymptotic] OF ST_CTRL_ParaController; 
@@ -286,8 +273,6 @@ END_CASE
 
 
 
-
-
 (*HMI*)
 eControllerModeHMI:=fbTempController.eCtrlMode;
 sControllerMode:=TO_STRING(eControllerModeHMI);
@@ -303,98 +288,10 @@ sProcessStateHMI:=TO_STRING(eProcessStateHMI);
 
 sState:=TO_STRING(State);
 
-//Test case
-//CASE iTestSetp OF
-//	0://Idel
-//		IF bStartTest THEN
-//			iRecipeIndex:=0;
-//			fbJsonFile.ResetDocument();
-//			bStartTest	:=FALSE;
-//			iTestSetp	:=5;
-//		END_IF
-//		
-//	5: //Load recipe or finish
-//		CASE iRecipeIndex OF
-//			0:sRecipeLoaded:='Fast';
-//			1:sRecipeLoaded:='Slow';
-//			2:sRecipeLoaded:='Asymptotic';				
-//		END_CASE
-//			stTestResults.TestName:=sRecipeLoaded;
-//			
-//		CASE iRecipeIndex OF
-//			0..2:	
-//				ResultOfLoad:=RecipeMan.WriteRecipe(RecipeDefinitionName:='AutoTuneParms', RecipeName:=sRecipeLoaded);
-//				IF ResultOfLoad = 0 THEN
-//					MEMSET(ADR(stTestResults),0,SIZEOF(stTestResults));
-//					stTestResults.InitialParmsUsed 		:=stControllerParameter;
-//					iTestSetp							:=10;
-//				ELSE
-//					iTestSetp:=99;
-//				END_IF
-//			ELSE
-//				iTestSetp:=100;
-//		END_CASE
-//		
-//		
-//	10://Waiting for controller to complete auto tuning	
-//		eCTRL_ModeController				:=E_CTRL_MODE.eCTRL_MODE_TUNE;
-//		eCTRL_ModeProcess					:=E_CTRL_MODE.eCTRL_MODE_ACTIVE;
-//		
-//		IF fbTempController.eCtrlState = E_CTRL_STATE.eCTRL_STATE_TUNED THEN	
-//			eCTRL_ModeController 				:=E_CTRL_MODE.eCTRL_MODE_ACTIVE;
-//			stTestResults.CalcedInternalGains	:= fbTempController.sParaControllerInternal;
-//			iTestSetp							:=20;
-//		END_IF
-//		
-//	20: //Finished auto tunning - run for a bit to see results of switching from auto tune to active	
-//		tonRun(IN:=TRUE,PT := TIME#3M);
-//		IF tonRun.Q THEN
-//			stTestResults.MaxOverShootDuringAutoTune:= fbTempController.fMaxOverShoot;
-//			stTestResults.StartupTimeDuringAutoTune := fbTempController.tStartUpTime;
-//			tonRun(IN:=FALSE);
-//			iTestSetp:=30;
-//		END_IF
-//		
-//	30://Reset simulation model, and controller
-//		eCTRL_ModeController	:=E_CTRL_MODE.eCTRL_MODE_RESET;
-//		eCTRL_ModeProcess		:=E_CTRL_MODE.eCTRL_MODE_RESET;
-//		tonReset(IN:=TRUE,PT := TIME#5S);
-//		IF tonReset.Q THEN
-//			tonReset(IN:=FALSE);
-//			iTestSetp		:=40;
-//		END_IF
-//		
-//	40://Run test with calcuated gains from auto tuning
-//		eCTRL_ModeController	:=E_CTRL_MODE.eCTRL_MODE_ACTIVE;
-//		eCTRL_ModeProcess		:=E_CTRL_MODE.eCTRL_MODE_ACTIVE;
-//		tonRun(IN:=TRUE, PT:= TIME#3M);
-//		IF tonRun.Q THEN
-//			stTestResults.MaxOverShoot	:=fbTempController.fMaxOverShoot;
-//			stTestResults.StartupTime 	:=fbTempController.tStartUpTime;
-//			fbJsonFile.AddObject(nData:=SIZEOF(stTestResults) , pData:=ADR(stTestResults));
-//			tonRun(IN:=FALSE);
-//			iTestSetp:=50;
-//		END_IF		
-//		
-//	50://Fisned running test
-//		eCTRL_ModeController	:=E_CTRL_MODE.eCTRL_MODE_RESET;
-//		eCTRL_ModeProcess		:=E_CTRL_MODE.eCTRL_MODE_RESET;
-//		iTestSetp				:=0;
-//
-//	
-//	99://Error
-//		iTestSetp:=0;	
-//		
-//	100://Test finished - save results to a file	
-//		IF fbJsonFile.SaveDocumentToFile(sFilePath:=sFilePath , bSaved=> ) THEN
-//			iTestSetp				:=0;
-//		END_IF
-//	
-//END_CASE
-//
-//
-//
-//
+rtClearParameterSet(CLK:=ClearParameterSet );
+IF rtClearParameterSet.Q THEN
+	MEMSET(destAddr:=ADR(arControllerParams) , fillByte:=0 , n:=SIZEOF(arControllerParams) );
+END_IF
 
 ]]></ST>
     </Implementation>
@@ -406,13 +303,17 @@ sState:=TO_STRING(State);
       <LineId Id="1033" Count="31" />
       <LineId Id="1189" Count="0" />
       <LineId Id="1187" Count="0" />
-      <LineId Id="1066" Count="12" />
+      <LineId Id="1066" Count="2" />
+      <LineId Id="1071" Count="7" />
       <LineId Id="1181" Count="0" />
       <LineId Id="1183" Count="3" />
       <LineId Id="1182" Count="0" />
       <LineId Id="1174" Count="0" />
       <LineId Id="1173" Count="0" />
-      <LineId Id="1079" Count="93" />
+      <LineId Id="1447" Count="0" />
+      <LineId Id="1171" Count="0" />
+      <LineId Id="1451" Count="2" />
+      <LineId Id="1172" Count="0" />
       <LineId Id="2" Count="0" />
     </LineIds>
   </POU>

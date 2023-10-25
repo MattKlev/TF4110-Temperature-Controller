@@ -10,7 +10,7 @@
       <Children>
         <Node>
           <Title>DataPool</Title>
-          <Expanded>False</Expanded>
+          <Expanded>True</Expanded>
           <FileName></FileName>
           <Children>
             <Node>
@@ -35,7 +35,7 @@
         </Node>
         <Node>
           <Title>YT Chart</Title>
-          <Expanded>False</Expanded>
+          <Expanded>True</Expanded>
           <FileName></FileName>
           <Children>
             <Node>
@@ -44,19 +44,19 @@
               <FileName></FileName>
               <Children>
                 <Node>
-                  <Title>Actual fX</Title>
+                  <Title>Actual</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
                 </Node>
                 <Node>
-                  <Title>Setpoint fW</Title>
+                  <Title>Setpoint</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
                 </Node>
                 <Node>
-                  <Title>Controller output fY</Title>
+                  <Title>Controller output</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
