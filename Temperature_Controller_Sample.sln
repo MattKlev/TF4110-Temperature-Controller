@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.33403.129
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{B1E792BE-AA5F-4E3C-8C82-674BF9C0715B}") = "Temperature_Controller_Sample", "TC_Sample\Temperature_Controller_Sample.tsproj", "{A4DA3CAD-1EAD-4980-A92A-2EB994DEADE5}"
 EndProject
+Project("{FD9F1D59-E000-42F3-8744-88DE1BE93C06}") = "Scope", "Scope\Scope.tcmproj", "{E6C75996-52E9-4EBD-8E3E-CAFAB8628BDD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|TwinCAT CE7 (ARMV7) = Debug|TwinCAT CE7 (ARMV7)
@@ -55,6 +57,16 @@ Global
 		{7500C89B-6F0F-4011-8A9F-7E1481CC2CC0}.Release|TwinCAT RT (x64).Build.0 = Release|TwinCAT RT (x64)
 		{7500C89B-6F0F-4011-8A9F-7E1481CC2CC0}.Release|TwinCAT RT (x86).ActiveCfg = Release|TwinCAT RT (x86)
 		{7500C89B-6F0F-4011-8A9F-7E1481CC2CC0}.Release|TwinCAT RT (x86).Build.0 = Release|TwinCAT RT (x86)
+		{E6C75996-52E9-4EBD-8E3E-CAFAB8628BDD}.Debug|TwinCAT CE7 (ARMV7).ActiveCfg = Debug|TwinCAT CE7 (ARMV7)
+		{E6C75996-52E9-4EBD-8E3E-CAFAB8628BDD}.Debug|TwinCAT OS (ARMT2).ActiveCfg = Debug|TwinCAT OS (ARMT2)
+		{E6C75996-52E9-4EBD-8E3E-CAFAB8628BDD}.Debug|TwinCAT OS (x64).ActiveCfg = Debug|TwinCAT OS (x64)
+		{E6C75996-52E9-4EBD-8E3E-CAFAB8628BDD}.Debug|TwinCAT RT (x64).ActiveCfg = Debug|TwinCAT RT (x64)
+		{E6C75996-52E9-4EBD-8E3E-CAFAB8628BDD}.Debug|TwinCAT RT (x86).ActiveCfg = Debug|TwinCAT RT (x86)
+		{E6C75996-52E9-4EBD-8E3E-CAFAB8628BDD}.Release|TwinCAT CE7 (ARMV7).ActiveCfg = Release|TwinCAT CE7 (ARMV7)
+		{E6C75996-52E9-4EBD-8E3E-CAFAB8628BDD}.Release|TwinCAT OS (ARMT2).ActiveCfg = Release|TwinCAT OS (ARMT2)
+		{E6C75996-52E9-4EBD-8E3E-CAFAB8628BDD}.Release|TwinCAT OS (x64).ActiveCfg = Release|TwinCAT OS (x64)
+		{E6C75996-52E9-4EBD-8E3E-CAFAB8628BDD}.Release|TwinCAT RT (x64).ActiveCfg = Release|TwinCAT RT (x64)
+		{E6C75996-52E9-4EBD-8E3E-CAFAB8628BDD}.Release|TwinCAT RT (x86).ActiveCfg = Release|TwinCAT RT (x86)
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
