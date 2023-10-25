@@ -5,8 +5,8 @@
   <Children>
     <Node>
       <Title>YT Scope Project</Title>
-      <Expanded>False</Expanded>
-      <FileName>C:\Users\MattK\Source\Repos\TF4110-Temperature-Controller\TwinCAT Measurement Project\YT Scope Project.tcscopex</FileName>
+      <Expanded>True</Expanded>
+      <FileName>C:\Users\MattK\source\repos\TF4110-Temperature-Controller\TwinCAT Measurement Project\YT Scope Project.tcscopex</FileName>
       <Children>
         <Node>
           <Title>DataPool</Title>
@@ -31,44 +31,32 @@
               <FileName></FileName>
               <Children />
             </Node>
-            <Node>
-              <Title>iTestSetp</Title>
-              <Expanded>False</Expanded>
-              <FileName></FileName>
-              <Children />
-            </Node>
           </Children>
         </Node>
         <Node>
-          <Title>XY Chart</Title>
+          <Title>YT Chart</Title>
           <Expanded>False</Expanded>
           <FileName></FileName>
           <Children>
             <Node>
               <Title>Axis Group</Title>
-              <Expanded>False</Expanded>
+              <Expanded>True</Expanded>
               <FileName></FileName>
               <Children>
                 <Node>
-                  <Title>iTestSetp</Title>
+                  <Title>Actual fX</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
                 </Node>
                 <Node>
-                  <Title>Actual</Title>
+                  <Title>Setpoint fW</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
                 </Node>
                 <Node>
-                  <Title>Setpoint</Title>
-                  <Expanded>False</Expanded>
-                  <FileName></FileName>
-                  <Children />
-                </Node>
-                <Node>
-                  <Title>Controller output</Title>
+                  <Title>Controller output fY</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
@@ -81,34 +69,7 @@
           <Title>Trigger</Title>
           <Expanded>False</Expanded>
           <FileName></FileName>
-          <Children>
-            <Node>
-              <Title>AutoTuneStarted</Title>
-              <Expanded>False</Expanded>
-              <FileName></FileName>
-              <Children>
-                <Node>
-                  <Title>Channel Trigger Set</Title>
-                  <Expanded>False</Expanded>
-                  <FileName></FileName>
-                  <Children />
-                </Node>
-              </Children>
-            </Node>
-            <Node>
-              <Title>RunTunned</Title>
-              <Expanded>False</Expanded>
-              <FileName></FileName>
-              <Children>
-                <Node>
-                  <Title>Channel Trigger Set (1)</Title>
-                  <Expanded>False</Expanded>
-                  <FileName></FileName>
-                  <Children />
-                </Node>
-              </Children>
-            </Node>
-          </Children>
+          <Children />
         </Node>
       </Children>
     </Node>
