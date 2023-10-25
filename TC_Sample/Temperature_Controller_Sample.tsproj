@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <TcSmProject xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.beckhoff.com/schemas/2012/07/TcSmProject" TcSmVersion="1.0" TcVersion="3.1.4024.53">
-	<Project ProjectGUID="{A4DA3CAD-1EAD-4980-A92A-2EB994DEADE5}" Target64Bit="true" ShowHideConfigurations="#x1c7">
+	<Project ProjectGUID="{A4DA3CAD-1EAD-4980-A92A-2EB994DEADE5}" ShowHideConfigurations="#x1c7">
 		<System>
 			<Settings MaxCpus="6" NonWinCpus="2" Packages="2" RouterMemory="536870912">
 				<Cpu CpuId="5"/>
