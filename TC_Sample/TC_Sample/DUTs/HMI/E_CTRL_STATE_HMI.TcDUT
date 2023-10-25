@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="E_CTRL_STATE_HMI" Id="{e9d3a6b2-46c1-44cf-8b0a-3cb69635e896}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+{attribute 'to_string'}
+TYPE E_CTRL_STATE_HMI :
+(
+	IDLE,  
+	PASSIVE, 
+	ACTIVE,
+	RESET,
+	MANUAL,
+	TUNING,
+	TUNED,
+	SELFTEST,
+	ERROR, 
+	SYNC_MOVEMENT,
+	FREEZE 
+);
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

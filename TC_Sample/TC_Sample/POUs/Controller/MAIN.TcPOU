@@ -1,12 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
   <POU Name="MAIN" Id="{af87d6dd-0784-46eb-bd9b-ea6d96cfb9a1}" SpecialFunc="None">
     <Declaration><![CDATA[PROGRAM MAIN
-
 VAR
-	
-		eCTRL_ModeController 	: E_CTRL_MODE := eCTRL_MODE_IDLE;
-		eCTRL_ModeProcess	 	: E_CTRL_MODE := eCTRL_MODE_IDLE; 
+		(* Controller *)
+		eCTRL_ModeController 	: E_CTRL_MODE := E_CTRL_MODE.eCTRL_MODE_IDLE;
 		
 		fW						: LREAL	:= 100.0;				(* setpoint *)
 		fY						: LREAL;						(* control value *)
@@ -106,43 +104,88 @@ VAR
 		
 	fbTempController			: FB_CTRL_TempController;
 	
-	fbProcess					: FB_Process;	
+
 	stController				: ST_CTRL_ParaController;
 	
+	Start					:BOOL;
+	rtStart					:R_TRIG;
+	Stop					:BOOL;
+	rtStop					:R_TRIG;
+	Reset					:BOOL;
+	rtReset					:R_TRIG;
+	State					:E_State;
+	sState					:STRING;
+	Mode					:E_Mode;
+	SelectedParameterSet	:E_SelectedParameterSet;
 	
-	//Test case
-	bStartTest				: BOOL;
-	iTestSetp				: UDINT;
-	tonReset				: TON := (PT := TIME#2S);
-	tonRun					: TON := (PT := TIME#1M30S);	
-	stTestResults			: ST_TestResults;
+	(* Simulate process *)	
+	ResetProcess			:BOOL;
+	ResetProcessStep		:INT;
+	rtResetProcess			:R_TRIG;
+	eCTRL_ModeProcess	 	: E_CTRL_MODE := E_CTRL_MODE.eCTRL_MODE_ACTIVE; 	
+	fbProcess				: FB_Process;		
+	
+	
+	(*HMI*)
+	eControllerModeHMI			:E_CTRL_MODE_HMI;
+	sControllerMode				:STRING;
+	eControllerState			:E_CTRL_STATE_HMI;
+	sControllerState			:STRING;
+	
+	eProcessModeHMI				:E_CTRL_MODE_HMI;
+	sProcessModeHMI				:STRING;
+	eProcessStateHMI			:E_CTRL_STATE_HMI;
+	sProcessStateHMI			:STRING;
+	
+	////Test case
+	//bStartTest				: BOOL;
+	//iTestSetp				: UDINT;
+	//tonReset				: TON;
+	//tonRun					: TON;	
+	//stTestResults			: ST_TestResults;
 	
 	//Write results to a file
- 	fbXmlSrvWrite  			: FB_XmlSrvWriteByName;
-   	sFilePath      			: T_MaxString := 'C:\TwinCAT\3.1\Boot\TestResults.xml';
-   	sXPath         			: T_MaxString; //:= '/dataentry/MAIN.stTestResults';	
-	
+	//fbJsonFile				:FB_AppendJsonObjectToArrayAndWriteToFile;
+   	//sFilePath      			:T_MaxString := 'C:\TwinCAT\3.1\Boot\TestResults.json';
+	//
 	//Recipe manager
-	sRecipeLoaded			:STRING;
-	RecipeMan				:RecipeManCommands;
-	{attribute 'displaymode':='hex'}
-	ResultOfLoad			:DWORD;
-	iRecipeIndex			:UDINT;
-	
-	//Scope test
-	fbSin					:GEN_SIN;
-	fAmp					:LREAL:=1;
-	fScopeOut					:LREAL;
-	rtIncrease				:R_TRIG;
+	//sRecipeLoaded			:STRING;
+	//RecipeMan				:RecipeManCommands;
+	//{attribute 'displaymode':='hex'}
+	//ResultOfLoad			:DWORD;
+	//iRecipeIndex			:UDINT;
+END_VAR
+VAR PERSISTENT
+	arControllerParams		:ARRAY[E_SelectedParameterSet.Fast..E_SelectedParameterSet.Asymptotic] OF ST_CTRL_ParaController; 
+END_VAR
+VAR CONSTANT
+	arAutoTuneGains			: ARRAY [E_SelectedParameterSet.Fast..E_SelectedParameterSet.Asymptotic] OF ST_AutoTuneGains := [(fKp := 1.2, fTn := 2, fTv := 0.42, fTd := 0.25), (fKp := 1, fTn := 2.5, fTv := 0.42, fTd := 0.25), (fKp := 0.5, fTn := 3, fTv := 1, fTd := 0.25)];
 END_VAR
 ]]></Declaration>
     <Implementation>
-      <ST><![CDATA[
-(* Simulate process *)
+      <ST><![CDATA[(* Simulate process *)
+rtResetProcess(CLK:=ResetProcess);
+CASE ResetProcessStep OF
+	0:
+		IF rtResetProcess.Q THEN
+			eCTRL_ModeProcess					:=E_CTRL_MODE.eCTRL_MODE_RESET;
+			ResetProcessStep:=10;
+		END_IF
+		
+	10:
+		IF fbProcess.eState = E_CTRL_STATE.eCTRL_STATE_IDLE THEN
+			eCTRL_ModeProcess					:=E_CTRL_MODE.eCTRL_MODE_ACTIVE;
+			ResetProcessStep:=0;
+		END_IF
+END_CASE
+
 fbProcess(	eCTRL_Mode	:= eCTRL_ModeProcess,
 			fY 			:= fbTempController.fYAnalog, 
 			bNoise 		:= , 
 			tTa 		:= stControllerParameter.tTaskCycleTime);	
+			
+			
+			
 
 (* Actual temperature *)				
 fX := fbProcess.fX;	
@@ -168,120 +211,209 @@ fbTempController(
 (* Analog output *)			
 fY 			:= fbTempController.fYAnalog;
 
-//Test case
-CASE iTestSetp OF
-	0://Idel
-		IF bStartTest THEN
-			iRecipeIndex:=0;
-			bStartTest	:=FALSE;
-			iTestSetp	:=5;
-		END_IF
-		
-	5: //Load recipe or finish
-		CASE iRecipeIndex OF
-			0:sRecipeLoaded:='Fast';
-			1:sRecipeLoaded:='Slow';
-			2:sRecipeLoaded:='Asymptotic';				
-		END_CASE
-		
-		CASE iRecipeIndex OF
-			0..2:	
-				ResultOfLoad:=RecipeMan.WriteRecipe(RecipeDefinitionName:='AutoTuneParms', RecipeName:=sRecipeLoaded);
-				IF ResultOfLoad = 0 THEN
-					MEMSET(ADR(stTestResults),0,SIZEOF(stTestResults));
-					eCTRL_ModeController				:=E_CTRL_MODE.eCTRL_MODE_TUNE;
-					eCTRL_ModeProcess					:=E_CTRL_MODE.eCTRL_MODE_ACTIVE;
-					stTestResults.InitialParmsUsed 		:=stControllerParameter;
-					iTestSetp							:=10;
-				ELSE
-					iTestSetp:=99;
-				END_IF
-			ELSE
-				iTestSetp:=100;
-		END_CASE
-		
-		
-	10://Waiting for controller to complete auto tuning	
-		IF fbTempController.eCtrlState = E_CTRL_STATE.eCTRL_STATE_TUNED THEN	
-			eCTRL_ModeController 				:=E_CTRL_MODE.eCTRL_MODE_ACTIVE;
-			iTestSetp							:=20;
-		END_IF
-		
-	20: //Finished auto tunning - run for a bit to see results of switching from auto tune to active	
-		tonRun(IN:=TRUE);
-		stTestResults.CalcedInternalGains		:= fbTempController.sParaControllerInternal;
-		IF tonRun.Q THEN
-			stTestResults.MaxOverShootDuringAutoTune:= fbTempController.fMaxOverShoot;
-			stTestResults.StartupTimeDuringAutoTune := fbTempController.tStartUpTime;
-			tonRun(IN:=FALSE);
-			iTestSetp:=30;
-		END_IF
-		
-	30://Reset simulation model, and controller
-		eCTRL_ModeController	:=E_CTRL_MODE.eCTRL_MODE_RESET;
-		eCTRL_ModeProcess		:=E_CTRL_MODE.eCTRL_MODE_RESET;
-		tonReset(IN:=TRUE);
-		IF tonReset.Q THEN
-			tonReset(IN:=FALSE);
-			eCTRL_ModeController	:=E_CTRL_MODE.eCTRL_MODE_ACTIVE;
-			eCTRL_ModeProcess		:=E_CTRL_MODE.eCTRL_MODE_ACTIVE;
-			iTestSetp		:=40;
-		END_IF
-		
-	40://Run test with calcuated gains from auto tuning
-		tonRun(IN:=TRUE);
-		IF tonRun.Q THEN
-			stTestResults.MaxOverShoot	:=fbTempController.fMaxOverShoot;
-			stTestResults.StartupTime 	:=fbTempController.tStartUpTime;
-			tonRun(IN:=FALSE);
-			iTestSetp:=50;
-		END_IF		
-		
-	50://Fisned running test
-		eCTRL_ModeController	:=E_CTRL_MODE.eCTRL_MODE_RESET;
-		eCTRL_ModeProcess		:=E_CTRL_MODE.eCTRL_MODE_RESET;
-		iTestSetp				:=60;
+rtStart(CLK:=Start);
+rtStop(CLK:=Stop);
+rtReset(CLK:=Reset);
 
-	60://Write results to a file.
-		
-		sXPath:=CONCAT(CONCAT(CONCAT('/',sRecipeLoaded),'/'),'MAIN.stTestResults');
-	
-		fbXmlSrvWrite(
-		 nMode      := XMLSRV_ADDMISSING, 
-		 sSymName   := 'MAIN.stTestResults',
-		 sFilePath  := sFilePath,
-		 sXPath     := sXPath,
-		 bExecute   := TRUE
-		);	
-		
-		IF NOT fbXmlSrvWrite.bBusy THEN
-			fbXmlSrvWrite(bExecute:=FALSE);
-			iTestSetp				:=5;
-			iRecipeIndex			:=iRecipeIndex+1;
-			eCTRL_ModeController	:=E_CTRL_MODE.eCTRL_MODE_IDLE;
-			eCTRL_ModeProcess		:=E_CTRL_MODE.eCTRL_MODE_IDLE;
+CASE State OF 
+	E_State.Idel:		
+		IF rtStart.Q THEN
+			CASE Mode OF 
+				E_Mode.Tune:
+					State:=E_State.LoadTunningParmaeters;
+				E_Mode.Run:
+					State:=E_State.LoadRunParameters;
+			END_CASE
+		ELSIF fbTempController.eCtrlState = E_CTRL_STATE.eCTRL_STATE_ERROR THEN
+			State								:=E_State.Error;
+		ELSIF rtReset.Q THEN
+			State:=E_State.Reset;
 		END_IF
 		
-	99://Error
-		iTestSetp:=0;	
-	100://Test finished
-		iTestSetp:=0;	
+	E_State.LoadTunningParmaeters:
+			stControllerParameter.bSelCtrlParameterSet:=FALSE;
+			
+			stControllerParameter.fTuneKp:=arAutoTuneGains[SelectedParameterSet].fKp;
+			stControllerParameter.fTuneTd:=arAutoTuneGains[SelectedParameterSet].fTd;
+			stControllerParameter.fTuneTv:=arAutoTuneGains[SelectedParameterSet].fTv;
+			stControllerParameter.fTuneTd:=arAutoTuneGains[SelectedParameterSet].fTd;
+			
+			eCTRL_ModeController				:=E_CTRL_MODE.eCTRL_MODE_TUNE;
+			State								:=E_State.AutoTuneInProgress;
+			
+	E_State.AutoTuneInProgress:
+	
+		IF fbTempController.eCtrlState = E_CTRL_STATE.eCTRL_STATE_TUNED THEN		
+			//Grab the calculated internal gains from the auto tune, and save them off to a persistent variable
+			arControllerParams[SelectedParameterSet]:= fbTempController.sParaControllerInternal;
+			eCTRL_ModeController 					:=E_CTRL_MODE.eCTRL_MODE_ACTIVE;
+			State									:=E_State.Run;
+		ELSIF fbTempController.eCtrlState = E_CTRL_STATE.eCTRL_STATE_ERROR THEN
+			State									:=E_State.Error;
+		END_IF
+		
+	E_State.LoadRunParameters:
+		//Use "sParaControllerExternal"
+		stControllerParameter.bSelCtrlParameterSet:=TRUE;
+		stController:=arControllerParams[SelectedParameterSet];
+		State									:=E_State.Run;
+	
+	E_State.Run:	
+		eCTRL_ModeController 					:=E_CTRL_MODE.eCTRL_MODE_ACTIVE;
+		
+		IF fbTempController.eCtrlState = E_CTRL_STATE.eCTRL_STATE_ERROR THEN
+			State								:=E_State.Error;
+		END_IF
+		
+		IF rtStop.Q THEN
+			eCTRL_ModeController				:=E_CTRL_MODE.eCTRL_MODE_IDLE;
+			State								:=E_State.Idel;
+		END_IF
+		
+	E_State.Error:
+		IF rtReset.Q THEN
+			State:=E_State.Reset;
+		END_IF
+		
+	E_State.Reset:
+		eCTRL_ModeController				:=E_CTRL_MODE.eCTRL_MODE_RESET;
+		
+		IF fbTempController.eCtrlState=E_CTRL_STATE.eCTRL_STATE_IDLE THEN
+			eCTRL_ModeController				:=E_CTRL_MODE.eCTRL_MODE_IDLE;
+			State								:=E_State.Idel;
+		END_IF
 END_CASE
 
-fbSin(
-	PT:=T#5S , 
-	AM:=fAmp , 
-	OS:=0 , 
-	DL:=0, 
-	Q=> , 
-	Out=>fScopeOut );
 
 
-rtIncrease(CLK:=fbSin.Out<=0 , Q=> );
-IF 	rtIncrease.Q THEN
-	fAmp:=fAmp+1;
-END_IF
+
+
+(*HMI*)
+eControllerModeHMI:=fbTempController.eCtrlMode;
+sControllerMode:=TO_STRING(eControllerModeHMI);
+
+eControllerState:=fbTempController.eCtrlState;
+sControllerState:=TO_STRING(eControllerState);
+
+eProcessModeHMI:=fbProcess.eCTRL_Mode;
+sProcessModeHMI:=TO_STRING(eProcessModeHMI);
+
+eProcessStateHMI:=fbProcess.eState;
+sProcessStateHMI:=TO_STRING(eProcessStateHMI);
+
+sState:=TO_STRING(State);
+
+//Test case
+//CASE iTestSetp OF
+//	0://Idel
+//		IF bStartTest THEN
+//			iRecipeIndex:=0;
+//			fbJsonFile.ResetDocument();
+//			bStartTest	:=FALSE;
+//			iTestSetp	:=5;
+//		END_IF
+//		
+//	5: //Load recipe or finish
+//		CASE iRecipeIndex OF
+//			0:sRecipeLoaded:='Fast';
+//			1:sRecipeLoaded:='Slow';
+//			2:sRecipeLoaded:='Asymptotic';				
+//		END_CASE
+//			stTestResults.TestName:=sRecipeLoaded;
+//			
+//		CASE iRecipeIndex OF
+//			0..2:	
+//				ResultOfLoad:=RecipeMan.WriteRecipe(RecipeDefinitionName:='AutoTuneParms', RecipeName:=sRecipeLoaded);
+//				IF ResultOfLoad = 0 THEN
+//					MEMSET(ADR(stTestResults),0,SIZEOF(stTestResults));
+//					stTestResults.InitialParmsUsed 		:=stControllerParameter;
+//					iTestSetp							:=10;
+//				ELSE
+//					iTestSetp:=99;
+//				END_IF
+//			ELSE
+//				iTestSetp:=100;
+//		END_CASE
+//		
+//		
+//	10://Waiting for controller to complete auto tuning	
+//		eCTRL_ModeController				:=E_CTRL_MODE.eCTRL_MODE_TUNE;
+//		eCTRL_ModeProcess					:=E_CTRL_MODE.eCTRL_MODE_ACTIVE;
+//		
+//		IF fbTempController.eCtrlState = E_CTRL_STATE.eCTRL_STATE_TUNED THEN	
+//			eCTRL_ModeController 				:=E_CTRL_MODE.eCTRL_MODE_ACTIVE;
+//			stTestResults.CalcedInternalGains	:= fbTempController.sParaControllerInternal;
+//			iTestSetp							:=20;
+//		END_IF
+//		
+//	20: //Finished auto tunning - run for a bit to see results of switching from auto tune to active	
+//		tonRun(IN:=TRUE,PT := TIME#3M);
+//		IF tonRun.Q THEN
+//			stTestResults.MaxOverShootDuringAutoTune:= fbTempController.fMaxOverShoot;
+//			stTestResults.StartupTimeDuringAutoTune := fbTempController.tStartUpTime;
+//			tonRun(IN:=FALSE);
+//			iTestSetp:=30;
+//		END_IF
+//		
+//	30://Reset simulation model, and controller
+//		eCTRL_ModeController	:=E_CTRL_MODE.eCTRL_MODE_RESET;
+//		eCTRL_ModeProcess		:=E_CTRL_MODE.eCTRL_MODE_RESET;
+//		tonReset(IN:=TRUE,PT := TIME#5S);
+//		IF tonReset.Q THEN
+//			tonReset(IN:=FALSE);
+//			iTestSetp		:=40;
+//		END_IF
+//		
+//	40://Run test with calcuated gains from auto tuning
+//		eCTRL_ModeController	:=E_CTRL_MODE.eCTRL_MODE_ACTIVE;
+//		eCTRL_ModeProcess		:=E_CTRL_MODE.eCTRL_MODE_ACTIVE;
+//		tonRun(IN:=TRUE, PT:= TIME#3M);
+//		IF tonRun.Q THEN
+//			stTestResults.MaxOverShoot	:=fbTempController.fMaxOverShoot;
+//			stTestResults.StartupTime 	:=fbTempController.tStartUpTime;
+//			fbJsonFile.AddObject(nData:=SIZEOF(stTestResults) , pData:=ADR(stTestResults));
+//			tonRun(IN:=FALSE);
+//			iTestSetp:=50;
+//		END_IF		
+//		
+//	50://Fisned running test
+//		eCTRL_ModeController	:=E_CTRL_MODE.eCTRL_MODE_RESET;
+//		eCTRL_ModeProcess		:=E_CTRL_MODE.eCTRL_MODE_RESET;
+//		iTestSetp				:=0;
+//
+//	
+//	99://Error
+//		iTestSetp:=0;	
+//		
+//	100://Test finished - save results to a file	
+//		IF fbJsonFile.SaveDocumentToFile(sFilePath:=sFilePath , bSaved=> ) THEN
+//			iTestSetp				:=0;
+//		END_IF
+//	
+//END_CASE
+//
+//
+//
+//
+
 ]]></ST>
     </Implementation>
+    <LineIds Name="MAIN">
+      <LineId Id="951" Count="11" />
+      <LineId Id="1175" Count="0" />
+      <LineId Id="963" Count="69" />
+      <LineId Id="1190" Count="0" />
+      <LineId Id="1033" Count="31" />
+      <LineId Id="1189" Count="0" />
+      <LineId Id="1187" Count="0" />
+      <LineId Id="1066" Count="12" />
+      <LineId Id="1181" Count="0" />
+      <LineId Id="1183" Count="3" />
+      <LineId Id="1182" Count="0" />
+      <LineId Id="1174" Count="0" />
+      <LineId Id="1173" Count="0" />
+      <LineId Id="1079" Count="93" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
   </POU>
 </TcPlcObject>

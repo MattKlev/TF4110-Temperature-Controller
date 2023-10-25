@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
   <POU Name="FB_Process" Id="{57529e90-5f23-42f8-aaea-dc263e299989}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK FB_Process
 
@@ -12,6 +12,7 @@ END_VAR
 
 VAR_OUTPUT
 	fX		:	LREAL;
+	eState	:E_CTRL_STATE;
 END_VAR
 
 VAR
@@ -74,7 +75,13 @@ IF bNoise THEN
 ELSE
 	fX := fbProcessPart2.fOut;
 END_IF;
-]]></ST>
+
+eState:=fbProcessPart2.eState;]]></ST>
     </Implementation>
+    <LineIds Name="FB_Process">
+      <LineId Id="3" Count="42" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
   </POU>
 </TcPlcObject>
